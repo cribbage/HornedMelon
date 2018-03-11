@@ -78,7 +78,7 @@ class StartMenu:
 			
 	def showMenu(self,windowSize,controller,fpsClock):	
 		while True:	
-			note = pygame.mixer.Sound('a.wav')
+			note = pygame.mixer.Sound('sounds/a.wav')
 			keysPressed = pygame.key.get_pressed()
 			events = pygame.event.get()
 			event = pygame.event.poll()
