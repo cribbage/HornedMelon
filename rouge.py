@@ -35,7 +35,7 @@ def start(windowSize,controller,loading,windowSurf):
 	dude = createPlayer(windowSize,levelStuff)
 	sword = Sword(dude.pos,dude.ROR,2)
 	levelStuff[1] = (levelStuff[1][0] - dude.ROR[0], levelStuff[1][1] - dude.ROR[1])
-	enemies = createEnemies(250,levelStuff,windowSize)
+	enemies = createEnemies(50,levelStuff,windowSize)
 	hudw = hud(dude, windowSize)
 	c = cursor(windowSize)
 	infoB = 'none'

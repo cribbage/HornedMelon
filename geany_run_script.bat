@@ -1,4 +1,4 @@
-c:\Python31\python "level.py"
+c:\Python31\python "rouge.py"
 
 pause
 del "%0"

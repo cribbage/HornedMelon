@@ -54,8 +54,8 @@ class brickLayer:
 		if xPos > self.surfSize[0]:			
 			xPos = 0
 			yPos += 20	
-	#	self.rectLength = random.randrange(15,40,5)
-	#	self.rectWidth = 20
+		self.rectLength = random.randrange(15,40,5)
+		self.rectWidth = 20
 		self.pos = (xPos, yPos)	
 			
 def test():

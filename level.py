@@ -111,7 +111,7 @@ def test():
 	windowSize = (1200, 600)
 	windowSurf = pygame.display.set_mode(windowSize)
 	
-	levelSize = (1200, 600)
+	levelSize = (2400, 1200)
 	lvl = level(levelSize,windowSize,1)
 	door = Door((100,96))
 	
@@ -135,4 +135,4 @@ def test():
 			time = 0		
 		pygame.display.flip()
 		fpsClock.tick(60)	
-test()
+#test()
