@@ -42,10 +42,10 @@ class level:
 	
 	#gets next direction for automata, makes sure it stays within the level
 	def getDirection(self,x,y):
-		up = (x,y-100)
-		down = (x,y+100)
-		left = (x-100,y)
-		right = (x+100,y)
+		up = (x,y-TILESIZE[1])
+		down = (x,y+TILESIZE[1])
+		left = (x-TILESIZE[0],y)
+		right = (x+TILESIZE[0],y)
 		direction = random.choice([up,down,left,right])
 		while direction[0] < 0 or direction[1] < 0 or direction[0] >= self.levelSize[0] or direction[1] >= self.levelSize[1]:
 			direction = random.choice([up,down,left,right])	
@@ -61,49 +61,26 @@ class level:
 			self.drawBrick(x,y)						
 			self.filledCoords.append(direction)								
 		
-	
-	#goes through each tile to see if its empty and fills it with water		
 	def drawWater(self,x=0,y=0):
 		for x in range(0,self.levelSize[0],TILESIZE[0]):
 			for y in range(0,self.levelSize[1],TILESIZE[1]):
 				if (x,y) not in self.filledCoords:					
 					self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],(x,y))
 					self.walls.append((x,y))
-					
-	def updateLevel(self):
+	
+	#goes through each tile to see if its empty and fills it with water		
+	def redrawWater(self,camera):
+		for wall in self.walls:
+			rect = Rect(wall,TILESIZE)
+			if rect.colliderect(camera):				
+				self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],wall)
+							
+	def updateLevel(self,camera):
 		self.cleanSurf = self.surf.copy()
 		self.time += 1
 		if self.time == 6:
 			self.time = 0
 			self.waterSurf.switchSurf()
-			self.drawWater()
-
-
+			self.redrawWater(camera)
 		
-def test():
-	pygame.init()
-	fpsClock = pygame.time.Clock()
-	
 
-	windowSurf = pygame.display.set_mode(WINDOWSIZE)
-	
-	levelSize = (1200, 600)
-	lvl = level(levelSize)
-	
-	while True:	
-		keysPressed = pygame.key.get_pressed()
-		events = pygame.event.get()
-		for event in events:
-			if event.type == QUIT:
-				pygame.quit()
-				sys.exit()
-			if event.type == KEYDOWN:
-				lvl = level(levelSize)
-		windowSurf.fill((0,0,0))
-		windowSurf.blit(lvl.surf,lvl.pos)
-		
-		lvl.updateLevel()
-					
-		pygame.display.flip()
-		fpsClock.tick(60)	
-#test()

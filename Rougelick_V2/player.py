@@ -4,6 +4,7 @@ from pygame.locals import *
 from globalVars import *
 from gameLogic import *
 from particles import Particle
+from Tongue import Tongue
 
 class player:
 	def __init__(self, pos):		
@@ -15,11 +16,14 @@ class player:
 		self.speed = 3
 		self.x = 0#velocity
 		self.y = 0#velocity
+		self.tongueLength = 60
+		self.tongue = Tongue(self.pos,self.tongueLength)
 		self.magicIntensity = 5
-		self.magicSpread = 	25
+		self.magicSpread = 	12
 		self.magicLife = 25
 		self.magicSpeed = 8
 		self.particles = []
+		self.attackMode = "magic"
 		self.mbd = False
 		
 	def drawFace(self,surf):
@@ -36,16 +40,19 @@ class player:
 		edgeCollision(self,levelSize)
 		wallCollision(self,wallRects)
 	
-	def magic(self):
+	def magic(self,x,y):#mouse position is relative to window, not level, so add cameras topleft positon to the mouse position
 		for i in range(self.magicIntensity):
 			xOffset = random.randint(-self.magicSpread,self.magicSpread)
 			yOffset = random.randint(-self.magicSpread,self.magicSpread)
 			mousePos = pygame.mouse.get_pos()
-			startPos = ((self.pos[0] + xOffset), (self.pos[1] + yOffset))
-			newP = Particle(8, startPos, self.magicLife, mousePos[0], mousePos[1],self.magicSpeed)
+			startPos = ((self.pos[0] + xOffset), (self.pos[1] + yOffset)) 
+			newP = Particle(8, startPos, self.magicLife, mousePos[0]+xOffset+x, mousePos[1]+yOffset+y,self.magicSpeed)
 			self.particles.append(newP)
-					
-	def getInput(self,events,levelSize,wallRects):
+	
+	def updateTongue(self):
+		self.tongue.update((self.rect.midbottom[0],self.rect.midbottom[1]-3),pygame.mouse.get_pos())
+		
+	def getInput(self,events,levelSize,wallRects,camera):
 		for event in events:
 			if event.type == KEYDOWN:				
 				if event.key == K_d:
@@ -56,6 +63,10 @@ class player:
 					self.y -= self.speed	
 				if event.key == K_s:
 					self.y += self.speed
+				if event.key == K_1:
+					self.attackMode = "magic"
+				if event.key == K_2:
+					self.attackMode = "tongue"	
 			elif event.type == KEYUP:
 				if event.key == K_d:					
 					self.x -= self.speed
@@ -71,10 +82,23 @@ class player:
 				self.mbd = False	
 		self.move(self.x,self.y,levelSize,wallRects)				
 		if self.mbd:
-			self.magic()
-			
-	def update(self,events,levelSize,wallRects):					
-		self.getInput(events,levelSize,wallRects)
+			if self.attackMode == "magic":
+				self.magic(camera.topleft[0],camera.topleft[1])
+			elif self.attackMode == "tongue":
+				self.updateTongue()
+	
+	def blit(self,surf,levelSize):
+		pygame.draw.rect(surf,self.color,self.rect,0)
+		self.drawFace(surf)
+		if self.mbd and self.attackMode == "tongue":
+			self.tongue.drawTongue(surf)
+		for p in self.particles:
+			p.update(surf,levelSize)
+			if p.remove:
+				self.particles.remove(p)	
+				
+	def update(self,events,levelSize,wallRects,camera):					
+		self.getInput(events,levelSize,wallRects,camera)
 	
 		
 		
