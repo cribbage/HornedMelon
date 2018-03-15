@@ -4,6 +4,7 @@ from pygame.locals import *
 from globalVars import *
 from brick import *
 from water import *
+from tools import *
 
 """
 This file handles level creation and animated tiles. The level is built
@@ -18,11 +19,14 @@ class level:
 		self.windowSize = WINDOWSIZE
 		self.surf = pygame.Surface(levelSize)
 		self.waterSurf = waterTile(TILESIZE)
-		self.filledCoords = []
+		self.floors = []
 		self.walls = []
+		self.xWalls = {}
+		self.wallDixct = {}
 		self.moves = self.getMoves()
 		self.buildLevel()
 		self.cleanSurf = self.surf
+		self.eCount = 500#amount of enemies
 		self.time = 0
 		
 	#determines how many moves the automata will make	
@@ -59,26 +63,28 @@ class level:
 			direction = self.getDirection(x,y)
 			x,y = direction		
 			self.drawBrick(x,y)						
-			self.filledCoords.append(direction)								
+			self.floors.append(direction)								
 		
 	def drawWater(self,x=0,y=0):
 		for x in range(0,self.levelSize[0],TILESIZE[0]):
+			self.xWalls[x] = []
 			for y in range(0,self.levelSize[1],TILESIZE[1]):
-				if (x,y) not in self.filledCoords:					
+				if (x,y) not in self.floors:					
 					self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],(x,y))
 					self.walls.append((x,y))
+					self.xWalls[x].append((x,y))
 	
 	#goes through each tile to see if its empty and fills it with water		
 	def redrawWater(self,camera):
 		for wall in self.walls:
 			rect = Rect(wall,TILESIZE)
-			if rect.colliderect(camera):				
+			if inCamera(camera,rect):				
 				self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],wall)
 							
-	def updateLevel(self,camera):
+	def updateLevel(self,camera,fpsn):
 		self.cleanSurf = self.surf.copy()
-		self.time += 1
-		if self.time == 6:
+		self.time += fpsn
+		if self.time >= 6:
 			self.time = 0
 			self.waterSurf.switchSurf()
 			self.redrawWater(camera)

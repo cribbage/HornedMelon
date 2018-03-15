@@ -1,4 +1,5 @@
 #!/usr/bin/env python
 
-TILESIZE = (100,100)
-WINDOWSIZE = (1200,600)
+TILESIZE = (64,64)
+WINDOWSIZE = (1280,640)
+FPS = 60

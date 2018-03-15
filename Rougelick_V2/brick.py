@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import pygame, math, sys, random
 from pygame.locals import *
-
+from globalVars import *
 """ 
 This file is for filling surfaces with brick textures. It creates bricks of
 six different lengths and randomly places them onto a surface with a 
@@ -11,7 +11,7 @@ Can either be used to create a whole background, or tiles.
 
 class Bricks:
 	#create this object and self.surfs will be a list of brick surfaces
-	def __init__(self,minLen=15,maxLen=40,step=5,width=20):
+	def __init__(self,minLen=TILESIZE[0]*.15,maxLen=TILESIZE[0]*.40,step=TILESIZE[0]*.05,width=TILESIZE[1]*.20):
 		self.surfs = []
 		self.minLen = minLen #minimum length of bricks
 		self.maxLen = maxLen #maximum length of bricks
@@ -28,7 +28,7 @@ class Bricks:
 	
 	#creates the brick surface	
 	def makeBrickSurface(self,i): 
-		bSurf = pygame.Surface((i,self.width)) 		
+		bSurf = pygame.Surface((round(i),round(self.width))) 		
 		bSurf = self.fillBrick(i,bSurf)		
 		return bSurf 
 	
@@ -43,7 +43,7 @@ class Bricks:
 			if x >= surfSize[0] and y < surfSize[1]:
 				x = 0
 				y+= 5
-		pygame.draw.rect(bSurf, (0,0,0), (0, 0,i, self.width), 3) 
+		pygame.draw.rect(bSurf, (0,0,0), (0, 0,i, self.width), 2) 
 		return bSurf
 			
 class BrickTile:
@@ -73,7 +73,7 @@ class BrickTile:
 		yPos = self.pos[1]
 		if xPos > self.tileSize[0]:			
 			xPos = 0
-			yPos += 20	
+			yPos += TILESIZE[1]*.2	
 		self.pos = (xPos, yPos)	
 			
 def test():
