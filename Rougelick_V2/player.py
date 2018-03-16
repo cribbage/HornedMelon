@@ -89,16 +89,12 @@ class player:
 			elif self.attackMode == "tongue":
 				self.updateTongue(camera.topleft)
 	
-	def blit(self,surf,levelSize,fpsn):
+	def blit(self,surf):
 		pygame.draw.rect(surf,self.color,self.rect,0)
 		self.drawFace(surf)
 		if self.mbd and self.attackMode == "tongue":
 			self.tongue.drawTongue(surf)
-		for p in self.particles:
-			p.update(surf,levelSize,fpsn)
-			if p.remove:
-				self.particles.remove(p)	
-				
+					
 	def update(self,events,levelSize,wallRects,camera,fpsn):					
 		self.getInput(events,levelSize,wallRects,camera,fpsn)
 	

@@ -13,7 +13,7 @@ def mainLoop(windowSurf,dude,fpsClock,lvl,enemies):
 		windowSurf.fill((0,0,0))
 		c = camera(dude.pos,lvl.levelSize)
 		update(lvl,dude,events,c,enemies,fpsNormalizer)
-		blit(windowSurf,dude,lvl,c,enemies,fpsNormalizer)			
+		blit(windowSurf,dude,lvl,c,enemies)			
 		pygame.display.set_caption("FPS: " +str(fpsClock.get_fps()))
 		pygame.display.flip()
 		fpsClock.tick(60)

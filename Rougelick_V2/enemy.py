@@ -65,28 +65,26 @@ class Enemy:
 		yt = self.rect.top-(self.rect.top%TILESIZE[1])
 		yb = self.rect.bottom-(self.rect.bottom%TILESIZE[1])	
 		collision = False	
+		x = round((self.pos[0]-(self.pos[0]%TILESIZE[0])))
+		y = round((self.pos[1]-(self.pos[1]%TILESIZE[1]))) 		
 		if xl != currTilex:
-			x = round((self.pos[0]-(self.pos[0]%TILESIZE[0]))-TILESIZE[0])
-			y = round((self.pos[1]-(self.pos[1]%TILESIZE[1]))) 
-			if (x,y) in xWalls[x]:
+			checkx = x-TILESIZE[0]
+			if (checkx,y) in xWalls[checkx]:
 				collision = True
 				self.rect.left = currTilex			
 		if xr != currTilex and not xr >= levelSize[0]:
-			x = round((self.pos[0]-(self.pos[0]%TILESIZE[0])+TILESIZE[0]))
-			y = round((self.pos[1]-(self.pos[1]%TILESIZE[1]))) 
-			if (x,y) in xWalls[x]:
+			checkx = x+TILESIZE[0]
+			if (checkx,y) in xWalls[checkx]:
 				collision = True
-				self.rect.right = currTilex+(TILESIZE[0]-1)			
+				self.rect.right = currTilex+TILESIZE[0]		
 		if yt != currTiley:
-			x = round((self.pos[0]-(self.pos[0]%TILESIZE[0])))
-			y = round((self.pos[1]-(self.pos[1]%TILESIZE[1]))-TILESIZE[0]) 
-			if (x,y) in xWalls[x]:
+			checky = y-TILESIZE[1]
+			if (x,checky) in xWalls[x]:
 				collision = True
 				self.rect.top = currTiley			
-		if yb != currTiley and not yb >= levelSize[1]:
-			x = round((self.pos[0]-(self.pos[0]%TILESIZE[0])))
-			y = round((self.pos[1]-(self.pos[1]%TILESIZE[1]))+TILESIZE[0]) 
-			if (x,y) in xWalls[x]:
+		if yb != currTiley and not yb >= levelSize[1]:		
+			checky = y+TILESIZE[0]
+			if (x,checky) in xWalls[x]:
 				collision = True
 				self.rect.bottom = currTiley+TILESIZE[1]			
 		self.pos = self.rect.center	
