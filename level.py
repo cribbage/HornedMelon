@@ -26,7 +26,7 @@ class level:
 		self.moves = self.getMoves()
 		self.buildLevel()
 		self.cleanSurf = self.surf
-		self.eCount = 50#amount of enemies
+		self.eCount = 100#amount of enemies
 		self.time = 0
 		
 	#determines how many moves the automata will make	
