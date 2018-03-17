@@ -83,13 +83,13 @@ def blitSourceParticles(particles,surf):#blit particles from specific source
 
 def	update(lvl,dude,events,camera,enemies,fpsn):
 	updatePlayer(dude,events,lvl.walls,lvl.levelSize,camera,fpsn)
-	updateEnemies(enemies,lvl.walls,lvl.levelSize,lvl.xWalls,fpsn)
+#	updateEnemies(enemies,lvl.walls,lvl.levelSize,lvl.xWalls,fpsn)
 	updateAllParticles([dude],lvl.levelSize,fpsn)
 	lvl.updateLevel(camera,fpsn)
 									
 def blit(windowSurf,dude,lvl,camera,enemies):
 	blitPlayer(dude,lvl.cleanSurf)
-	blitEnemies(enemies,lvl.cleanSurf,camera)
+#	blitEnemies(enemies,lvl.cleanSurf,camera)
 	blitAllParticles([dude],lvl.cleanSurf)
 	windowSurf.blit(lvl.cleanSurf.subsurface(camera),(0,0))
 	

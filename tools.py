@@ -16,7 +16,7 @@ def inCamera(cam,rect):
 
 def camera(pos,levelSize):
 	rect = Rect ((0,0),WINDOWSIZE)
-	rect.center = pos
+	rect.center = (pos[0]+random.randint(-5,5),pos[1]+random.randint(-5,5))
 	if rect.left < 0:
 		rect.left = 0
 	elif rect.right > levelSize[0]:
