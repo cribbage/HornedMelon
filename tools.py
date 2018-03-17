@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+#hello
 import pygame, math, sys, random
 from globalVars import *
 from pygame.locals import *
