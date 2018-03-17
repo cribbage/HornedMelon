@@ -1,138 +1,92 @@
-import pygame, math, sys, random, particles, enemy
+#!/usr/bin/env python
+import pygame, math, sys, random
 from pygame.locals import *
-from brickLayer import brick, brickLayer
+from globalVars import *
+from brick import *
 from water import *
-from save import *
-from rug import Rug
+from tools import *
+
+"""
+This file handles level creation and animated tiles. The level is built
+by a simple automata, so every tile is reachable.
+"""
 
 class level:
-	def __init__(self,levelSize, windowSize, rooms):
+	#Initializing builds the level
+	def __init__(self,levelSize):
+		self.pos = (0,0)
 		self.levelSize = levelSize
-		self.windowSize = windowSize
+		self.windowSize = WINDOWSIZE
 		self.surf = pygame.Surface(levelSize)
-		self.waterSurf = waterLayer((100,96))
-		self.rug = Rug((100,48))
-		self.emptyCoords = []
-		self.subSurfs = {}
-		self.buildLevel(False)
-		self.reloaded = False
-		self.rooms = rooms
+		self.waterSurf = waterTile(TILESIZE)
+		self.floors = []
+		self.walls = []
+		self.xWalls = {}
+		self.wallDixct = {}
+		self.moves = self.getMoves()
+		self.buildLevel()
+		self.cleanSurf = self.surf
+		self.eCount = 50#amount of enemies
 		self.time = 0
-		self.data = (self.emptyCoords)
-
-	def loadData(self):
-		self.subSurfs = {}
-		saveData = Save([],'levelData.txt')
-		saveData.load(str)	
-		self.data = saveData.data
-		self.convertData()
-		self.emptyCoords = self.data
-		self.reloaded = True
-		self.buildLevel(True)
-	
-	def convertData(self):
-		tups = []
-		for string in self.data:
-			string.strip(" ")
-			x = string.split(',')[0]
-			y = string.split(',')[1]
-			tups.append((int(x),int(y)))
-		self.data = tups	
+		
+	#determines how many moves the automata will make	
+	def getMoves(self):
+		x = self.levelSize[0]//TILESIZE[0]
+		y = self.levelSize[1]//TILESIZE[1]
+		return (x*y)*2
 			
-	def buildLevel(self, loading):
-		self.drawFloor(loading,'empty',0,0,[],[],0,0,300)
+	def buildLevel(self):
+		self.drawFloor()
 		self.drawWater()
 	
-	def drawBrick(self,x,y,needFloorx,last,start):
-		self.surf.blit(brickLayer((100,96)).surf,(x,y))
-	#	self.surf.blit(self.rug.surf,(x,y+24))		
-		if last =='full' and x in needFloorx:
-			needFloorx.remove(x)		
-		elif last == 'empty':
-			last = 'full'
-			start = x
-		return(last,start,needFloorx)
+	#draws brick tile to level
+	def drawBrick(self,x,y):
+		self.surf.blit(BrickTile(TILESIZE).surf,(x,y))	
+		return
 	
-	def skipTile(self,x,y,needFloorx,start,finish,last):
-		self.emptyCoords.append((x,y))
-		last ='empty'
-		finsh = x 
-		if finish <= start:
-			nextX = start
-		else:
-			nextX = random.randrange(start,finish,100)
-		needFloorx.append(nextX)
-		return(last,finish,needFloorx)
+	#gets next direction for automata, makes sure it stays within the level
+	def getDirection(self,x,y):
+		up = (x,y-TILESIZE[1])
+		down = (x,y+TILESIZE[1])
+		left = (x-TILESIZE[0],y)
+		right = (x+TILESIZE[0],y)
+		direction = random.choice([up,down,left,right])
+		while direction[0] < 0 or direction[1] < 0 or direction[0] >= self.levelSize[0] or direction[1] >= self.levelSize[1]:
+			direction = random.choice([up,down,left,right])	
+		return direction	
 		
-	def drawFloor(self,loading,last,start,finish,needFloorx,needFloory,x,y,straight):
-		while x <= self.levelSize[0] and y < self.levelSize[1]:	
-			choice = random.randint(0,1)
-			if loading:
-				choice = 1
-			if y == straight:
-				choice =1
-			if x in needFloorx or choice == 1:	
-				last,start,needFloorx = self.drawBrick(x,y,needFloorx,last,start)										
-			elif choice == 0:
-				last,finish,needFloorx = self.skipTile(x,y,needFloorx,start,finish,last)
-			x+=round(self.windowSize[0]*.083)
-			if x == self.levelSize[0]:
-				x =0
-				y +=round(self.windowSize[1]*.16)
-				
-	def drawWater(self):
-		for coords in self.emptyCoords:	
-			self.subSurfs[coords] = Rect(coords,(100,96))				
-			self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],coords)
-			
-	def updateLevel(self,paused):
-		if not paused:
-			self.time += 1
-			if self.time == 6:
-				self.time = 0
-				self.waterSurf.switchSurf()
-				self.drawWater()
+	#creates level using simple automata
+	def drawFloor(self):	
+		x=self.levelSize[0]//2
+		y=self.levelSize[1]//2
+		for z in range(self.moves,0,-1):
+			direction = self.getDirection(x,y)
+			x,y = direction		
+			self.drawBrick(x,y)						
+			self.floors.append(direction)								
+		
+	def drawWater(self,x=0,y=0):
+		for x in range(0,self.levelSize[0],TILESIZE[0]):
+			self.xWalls[x] = []
+			for y in range(0,self.levelSize[1],TILESIZE[1]):
+				if (x,y) not in self.floors:					
+					self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],(x,y))
+					self.walls.append((x,y))
+					self.xWalls[x].append((x,y))
+	
+	#goes through each tile to see if its empty and fills it with water		
+	def redrawWater(self,camera):
+		for wall in self.walls:
+			rect = Rect(wall,TILESIZE)
+			if inCamera(camera,rect):				
+				self.surf.blit(self.waterSurf.surfs[self.waterSurf.surfC],wall)
+							
+	def updateLevel(self,camera,fpsn):
+		self.cleanSurf = self.surf.copy()
+		self.time += fpsn
+		if self.time >= 6:
+			self.time = 0
+			self.waterSurf.switchSurf()
+			self.redrawWater(camera)
+		
 
-class Door:
-	def __init__(self,surfSize):
-		self.surf = pygame.Surface(surfSize).convert_alpha()	
-		self.surf.fill((0,0,0,0))
-		self.drawDoor()
-		
-	def drawDoor(self):
-		pygame.draw.rect(self.surf, (139,69,19), (12,52,74,75),0)
-		pygame.draw.ellipse(self.surf, (139,69,19), (12,12,75,75),0)
-		pygame.draw.circle(self.surf, (255,215,0), (32,62), 6, 0)
-		
-def test():
-	pygame.init()
-	fpsClock = pygame.time.Clock()
-	
-	windowSize = (1200, 600)
-	windowSurf = pygame.display.set_mode(windowSize)
-	
-	levelSize = (2400, 1200)
-	lvl = level(levelSize,windowSize,1)
-	door = Door((100,96))
-	
-	time = 0
-	while True:	
-		keysPressed = pygame.key.get_pressed()
-		events = pygame.event.get()
-		event = pygame.event.poll()
-		if event.type == QUIT:
-			pygame.quit()
-			sys.exit()
-		
-		windowSurf.fill((0,0,0))
-		lvl.surf.blit(door.surf,(200,193))
-		windowSurf.blit(lvl.surf,(0,0))
-		
-		lvl.updateLevel(time)
-			
-		time += 1
-		if time > 6:
-			time = 0		
-		pygame.display.flip()
-		fpsClock.tick(60)	
-#test()

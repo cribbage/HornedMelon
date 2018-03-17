@@ -1,5 +1,0 @@
-<objects.scroll object at 0x02AA3B30>
-<objects.potion object at 0x02AA75D0>
-<objects.potion object at 0x02AA34F0>
-<objects.scroll object at 0x02AA70F0>
-<objects.scroll object at 0x02AA7690>

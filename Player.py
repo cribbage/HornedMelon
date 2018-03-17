@@ -1,116 +1,102 @@
-import pygame, math, sys, random, particles, enemy, os
+#!/usr/bin/env python
+import pygame, math, sys, random, os
 from pygame.locals import *
-from save import *
+from globalVars import *
+from particles import Particle
+from Tongue import Tongue
+from tools import *
 
 class player:
-	def __init__(self, pos, wallRects,windowSize):
-		global BUTTONS
-		BUTTONS = Save([],'controls.txt').load(int)
+	def __init__(self, pos):		
 		self.pos = pos
 		self.color = (111,0,0)
-		self.windowSize = windowSize
-		self.size =(random.randint(15,30), random.randint(15,30))
-		self.ssp = random.randint(random.randint(0,11),random.randint(11,21))#starting skill points (spend them on skills)
-		self.health = random.randint(10,25)#health
-		self.mHealth = self.health#max health
-		self.strg = random.randint(1,15)#strength(for swords)
-		self.foc = random.randint(2,15)#focus(for magic)
-		self.agl = random.randint(1,15)#agility(for bows)
-		self.dfen = random.randint(1,15)#defence
-		self.luck = random.randint(10,25)#luck(for finding items and affects enemy damage)
-		self.mLuck = self.luck
-		self.hunger = random.randint(10,35)#eat or pass out
-		self.stats = {'hp':str(self.health)+ "/" + str(self.mHealth), 'str':self.strg, 'agl':self.agl, 'def':self.dfen, 'MP':self.luck, 'hun':self.hunger, 'foc':self.foc}
-		self.mIntensity = random.randint(1,self.foc)#magic intensity
+		self.size =(random.randint(15,30), random.randint(15,30))	
+		self.rect = Rect((0,0),self.size)
+		self.rect.center = pos
+		self.speed = 3
 		self.x = 0#velocity
 		self.y = 0#velocity
-		self.mAttack = False
-		self.rAttack = False
-		self.sAttack = False
-		self.direction = [0,0]
+		self.tongueLength = 60
+		self.tongue = Tongue(self.pos,self.tongueLength)
+		self.magicIntensity = 5
+		self.magicSpread = 	12
+		self.magicLife = 25
+		self.magicSpeed = 8
 		self.particles = []
-		self.atypes = ['magic', 'sword']
-		self.atype = 'magic'
-		self.alive = True
-		self.quiver = []
-		self.fired = []
-		self.ROR = (self.pos[0] - round(windowSize[0]/2), self.pos[1] - round((windowSize[1]/2)-(windowSize[1]*.08)))
-		self.data = (int(self.pos[0]//self.pos[0]),self.pos[1],self.size[0],self.size[1],self.health,self.mHealth,self.strg,self.foc,self.agl,self.dfen,self.luck,self.hunger,self.mIntensity)
-		self.rect = Rect(self.pos[0], self.pos[1],self.size[0], self.size[1])
-		self.stoned = random.choice([True, False])
-		self.hitTimer = 0
-		self.speed = 3
+		self.attackMode = "magic"
+		self.mbd = False
 		
-	def drawFace(self,surf,windowSize):
-		if self.stoned:
-			pygame.draw.circle(surf, (255,0,0), (int(windowSize[0]//2)+random.randint(0,5),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 3, 0)#LEFT EYE
-			pygame.draw.circle(surf, (255,0,0), (int(windowSize[0]//2)+random.randint(self.size[0]-5,self.size[0]),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 3, 0)#RIGHT EYE
-		else:
-			pygame.draw.circle(surf, (255,255,255), (int(windowSize[0]//2)+random.randint(0,5),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 3, 0)#LEFT EYE
-			pygame.draw.circle(surf, (255,255,255), (int(windowSize[0]//2)+random.randint(self.size[0]-5,self.size[0]),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 3, 0)#RIGHT EYE
-		pygame.draw.circle(surf, (0,0,0), (int(windowSize[0]//2)+random.randint(0,5),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 2, 0)
-		pygame.draw.circle(surf, (0,0,0), (int(windowSize[0]//2)+random.randint(self.size[0]-5,self.size[0]),round((self.windowSize[1]/2)-(self.windowSize[1]*.08))+random.randint(0,5)), 2, 0)
+	def drawFace(self,surf):
+		pygame.draw.circle(surf, (255,255,255), self.rect.topleft, 3, 0)#LEFT EYE
+		pygame.draw.circle(surf, (255,255,255), self.rect.topright, 3, 0)#RIGHT EYE
+		pygame.draw.circle(surf, (0,0,0), (self.rect.topleft[0]+random.randint(-2,2),self.rect.topleft[1]+random.randint(-2,2)), 2, 0)#left pupil
+		pygame.draw.circle(surf, (0,0,0), (self.rect.topright[0]+random.randint(-2,2),self.rect.topright[1]+random.randint(-2,2)), 2, 0)#right pupil
 		mouthStart = random.randint(-2,2)
 		pygame.draw.arc(surf,(255,0,0), self.rect,-2,-1, 1)#MOUTH
-
-	def collideItem(self,item, invent, itemlist):
-		if item.rect.collidepoint(self.pos)or item.rect.collidepoint(((self.pos[0]+self.size[0]),self.pos[1])) or item.rect.collidepoint(((self.pos[0]+self.size[0]),(self.pos[1]+self.size[1]))) or item.rect.collidepoint((self.pos[0],(self.pos[1]+self.size[1]))):
-			if not invent.full:		
-				invent.addItem(item)		
-				itemlist.remove(item)
-				
-	def loadData(self):
-		saveData = Save([],'playerData.txt')
-		saveData.load(int)	
-		self.data = saveData.data
-		print(self.data)
-		self.fillData()
-			
-	def fillData(self):
-		self.pos=(self.windowSize[0]/2,round((self.windowSize[1]/2)-(self.windowSize[1]*.08)))
-		self.size =(self.data[2], self.data[3])
-		self.health = self.data[4]#health
-		self.mHealth = self.data[5]#max health
-		self.strg = self.data[6]#strength(for swords)
-		self.foc = self.data[7]#focus(for magic)
-		self.agl = self.data[8]#agility(for bows)
-		self.dfen = self.data[9]#defence
-		self.luck = self.data[10]#luck(for finding items and affects enemy damage)
-		self.hunger = self.data[11]#eat or pass out
-		self.mIntensity = self.data[12]	
-		self.stats = {'hp':str(self.health)+ "/" + str(self.mHealth), 'str':self.strg, 'agl':self.agl, 'def':self.dfen, 'MP':self.luck, 'hun':self.hunger, 'foc':self.foc}
-				
-	def move(self,dpad):
-		self.x = dpad[0]*self.speed
-		self.y = -dpad[1]*self.speed
 	
-	def getInput(self,event, fireSound):
-		if event.type == JOYBUTTONDOWN:
-			if event.button == BUTTONS[3]:
-				if self.atype == 'magic':
-					fireSound.play()
-					self.mAttack = True	
-				elif self.atype =='sword':
-					self.sAttack = True
-			elif event.button == BUTTONS[5]:
-				if self.atypes.index(self.atype) >  0:
-					self.atype = self.atypes[(self.atypes.index(self.atype))-1]
-				else:
-					self.atype = self.atypes[len(self.atypes)-1]	
-		if event.type == JOYBUTTONUP:
-			if event.button == BUTTONS[3]:	
-				if self.atype == 'magic':
-					fireSound.stop()
-					self.mAttack = False		
-				elif self.atype =='sword':
-					self.sAttack = False	
+	def move(self,xVel,yVel,levelSize,wallRects,fpsn):
+		self.pos = (self.pos[0]+round(xVel*fpsn),self.pos[1]+round(yVel*fpsn))
+		self.rect.center = self.pos
+		edgeCollision(self,levelSize)
+		wallCollision(self,wallRects)
+	
+	def magic(self,x,y,fpsn):#mouse position is relative to window, not level, so add cameras topleft positon to the mouse position
+		for i in range(self.magicIntensity):
+			xOffset = random.randint(-self.magicSpread,self.magicSpread)
+			yOffset = random.randint(-self.magicSpread,self.magicSpread)
+			mousePos = pygame.mouse.get_pos()
+			startPos = ((self.pos[0] + xOffset), (self.pos[1] + yOffset)) 
+			newP = Particle(4, startPos, self.magicLife, mousePos[0]+xOffset+x, mousePos[1]+yOffset+y,self.magicSpeed,fpsn)
+			self.particles.append(newP)
+	
+	def updateTongue(self,camera):
+		mousePos = pygame.mouse.get_pos()
+		realMousePos = (mousePos[0]+camera[0],mousePos[1]+camera[1])
+		self.tongue.update((self.rect.midbottom[0],self.rect.midbottom[1]-3),realMousePos)
 		
-	def update(self, events, keysPressed, wallRects, dpad, cAxis, surf, windowSize, fireSound,fps):		
-	#	self.speed = (60//fps)*3					
+	def getInput(self,events,levelSize,wallRects,camera,fpsn):
 		for event in events:
-			self.move(dpad)
-			self.getInput(event, fireSound)
-		self.direction = (cAxis[0],cAxis[1])
+			if event.type == KEYDOWN:				
+				if event.key == K_d:
+					self.x += self.speed
+				if event.key == K_a:
+					self.x -= self.speed
+				if event.key == K_w:
+					self.y -= self.speed	
+				if event.key == K_s:
+					self.y += self.speed
+				if event.key == K_1:
+					self.attackMode = "magic"
+				if event.key == K_2:
+					self.attackMode = "tongue"	
+			elif event.type == KEYUP:
+				if event.key == K_d:					
+					self.x -= self.speed
+				if event.key == K_a:				
+					self.x += self.speed
+				if event.key == K_w:
+					self.y += self.speed	
+				if event.key == K_s:
+					self.y -= self.speed
+			if event.type == MOUSEBUTTONDOWN:				
+				self.mbd = True
+			if event.type == MOUSEBUTTONUP:
+				self.mbd = False	
+		self.move(self.x,self.y,levelSize,wallRects,fpsn)				
+		if self.mbd:
+			if self.attackMode == "magic":
+				self.magic(camera.topleft[0],camera.topleft[1],fpsn)
+			elif self.attackMode == "tongue":
+				self.updateTongue(camera.topleft)
+	
+	def blit(self,surf):
+		pygame.draw.rect(surf,self.color,self.rect,0)
+		self.drawFace(surf)
+		if self.mbd and self.attackMode == "tongue":
+			self.tongue.drawTongue(surf)
+					
+	def update(self,events,levelSize,wallRects,camera,fpsn):					
+		self.getInput(events,levelSize,wallRects,camera,fpsn)
+	
 		
-		self.pos = (self.pos[0]+self.x, self.pos[1]+self.y)	
-		self.rect = Rect(windowSize[0]/2,round((windowSize[1]/2)-(windowSize[1]*.08)),self.size[0], self.size[1])
+		
